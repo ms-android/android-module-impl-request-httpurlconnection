@@ -1,8 +1,12 @@
 package com.ms.module.impl.httpurlconnection;
 
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+
 import com.ms.module.supers.client.Modules;
-import com.ms.module.supers.inter.net.Response;
+import com.ms.module.supers.inter.request.Response;
+
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
@@ -19,19 +23,22 @@ import java.util.Map;
 public class HttpURLConnectionUtils {
 
 
-    public static Response doGet(Map<String, String> headers, String url) {
+    private static final String TAG = "Module - Request - HttpURLConnection";
 
+    public static Response doGet(Map<String, String> headers, String url) {
         Response response = new Response();
         HttpURLConnection connection = null;
         try {
             //发起网络请求
             connection = (HttpURLConnection) new URL(url).openConnection();
-            connection.setRequestMethod("GET");//请求方式
+            //请求方式
+            connection.setRequestMethod("GET");
             int connectTimeout = Modules.getRequestSettingModule().getConnectTimeout();
             int readTimeout = Modules.getRequestSettingModule().getReadTimeout();
-
-            connection.setConnectTimeout(connectTimeout);//连接最大时间
-            connection.setReadTimeout(readTimeout);//读取最大时间
+            //连接最大时间
+            connection.setConnectTimeout(connectTimeout * 1000);
+            //读取最大时间
+            connection.setReadTimeout(readTimeout * 1000);
             if (headers != null) {
                 for (String k : headers.keySet()) {
                     if (null != k && !"".equals(k)) {
@@ -40,10 +47,34 @@ public class HttpURLConnectionUtils {
                 }
             }
             connection.connect();
+
+            RequestLogUtils.d(TAG, "----------");
+            RequestLogUtils.d(TAG, "url :" + url);
+            RequestLogUtils.d(TAG, "----------");
+            if (headers != null) {
+                for (String k : headers.keySet()) {
+                    if (null != k && !"".equals(k)) {
+                        RequestLogUtils.d(TAG, "----------");
+                        RequestLogUtils.d(TAG, "header " + k + " : " + headers.get(k));
+                        RequestLogUtils.d(TAG, "----------");
+                    }
+                }
+            }
+
             int responseCode = connection.getResponseCode();
-            response.code = responseCode;
             String responseMessage = connection.getResponseMessage();
+            String requestMethod = connection.getRequestMethod();
+            response.code = responseCode;
             response.message = responseMessage;
+            RequestLogUtils.d(TAG, "----------");
+            RequestLogUtils.d(TAG, "method  : " + requestMethod);
+            RequestLogUtils.d(TAG, "----------");
+            RequestLogUtils.d(TAG, "code : " + responseCode);
+            RequestLogUtils.d(TAG, "----------");
+            RequestLogUtils.d(TAG, "message  : " + responseMessage);
+            RequestLogUtils.d(TAG, "----------");
+
+
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 InputStream inputStream = connection.getInputStream();
                 BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
@@ -74,8 +105,10 @@ public class HttpURLConnectionUtils {
             connection.setRequestMethod("POST");
             int connectTimeout = Modules.getRequestSettingModule().getConnectTimeout();
             int readTimeout = Modules.getRequestSettingModule().getReadTimeout();
-            connection.setConnectTimeout(connectTimeout);
-            connection.setReadTimeout(readTimeout);
+            //连接最大时间
+            connection.setConnectTimeout(connectTimeout * 1000);
+            //读取最大时间
+            connection.setReadTimeout(readTimeout * 1000);
             if (headers != null) {
                 for (String k : headers.keySet()) {
                     if (null != k && !"".equals(k)) {
@@ -135,15 +168,16 @@ public class HttpURLConnectionUtils {
         BufferedReader reader = null;
         PrintWriter out = null;
         try {
-            connection = (HttpURLConnection) new URL(url).openConnection();//发起网络请求
-            connection.setRequestMethod("POST");//请求方式
+
+            connection = (HttpURLConnection) new URL(url).openConnection();
+            connection.setRequestMethod("POST");
             int connectTimeout = Modules.getRequestSettingModule().getConnectTimeout();
             int readTimeout = Modules.getRequestSettingModule().getReadTimeout();
 
             //连接最大时间
-            connection.setConnectTimeout(connectTimeout);
+            connection.setConnectTimeout(connectTimeout * 1000);
             //读取最大时间
-            connection.setReadTimeout(readTimeout);
+            connection.setReadTimeout(readTimeout * 1000);
             if (headers != null) {
                 for (String k : headers.keySet()) {
                     if (null != k && !"".equals(k)) {
@@ -160,7 +194,7 @@ public class HttpURLConnectionUtils {
             int responseCode = connection.getResponseCode();
             if (responseCode == HttpURLConnection.HTTP_OK) {
                 InputStream in = connection.getInputStream();
-                reader = new BufferedReader(new InputStreamReader(in));//写入reader
+                reader = new BufferedReader(new InputStreamReader(in));
                 StringBuilder resultString = new StringBuilder();
                 String str;
                 while ((str = reader.readLine()) != null) {
@@ -190,5 +224,45 @@ public class HttpURLConnectionUtils {
             }
         }
         return response;
+    }
+
+
+    public static Bitmap downloadImage(String url) {
+        Bitmap bmp = null;
+        HttpURLConnection connection = null;
+        try {
+            URL myurl = new URL(url);
+            // 获得连接
+            connection = (HttpURLConnection) myurl.openConnection();
+            connection.setConnectTimeout(6000);
+            connection.setDoInput(true);
+            connection.setUseCaches(false);
+            connection.connect();
+
+            int responseCode = connection.getResponseCode();
+
+            String responseMessage = connection.getResponseMessage();
+
+            String requestMethod = connection.getRequestMethod();
+
+            RequestLogUtils.d(TAG, "code : " + responseCode);
+            RequestLogUtils.d(TAG, "message : " + responseMessage);
+            RequestLogUtils.d(TAG, "method : " + requestMethod);
+
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                //获得图片的数据流
+                InputStream is = connection.getInputStream();
+                bmp = BitmapFactory.decodeStream(is);
+                is.close();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
+        return bmp;
     }
 }
