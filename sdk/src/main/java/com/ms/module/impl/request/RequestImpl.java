@@ -9,7 +9,6 @@ import com.ms.module.supers.inter.request.IRequestAdapter;
 import com.ms.module.supers.inter.request.RequestCallBack;
 import com.ms.module.supers.inter.request.Response;
 
-
 import java.io.IOException;
 import java.util.Map;
 
@@ -36,7 +35,7 @@ public class RequestImpl extends IRequestAdapter {
                 Response response = HttpURLConnectionUtils.doGet(headers, url);
                 if (response.throwable != null) {
                     if (callBack != null) {
-                        callBack.onFilure(response.throwable);
+                        callBack.onFailure(response.throwable);
                     } else {
                         callBack.onSuccess(response);
                     }
@@ -59,7 +58,7 @@ public class RequestImpl extends IRequestAdapter {
 
                 if (response.throwable != null) {
                     if (callBack != null) {
-                        callBack.onFilure(response.throwable);
+                        callBack.onFailure(response.throwable);
                     }
                 } else {
                     if (callBack != null) {
@@ -83,7 +82,7 @@ public class RequestImpl extends IRequestAdapter {
                 Response response = HttpURLConnectionUtils.requestBody(headers, url, body);
                 if (response.throwable != null) {
                     if (callBack != null) {
-                        callBack.onFilure(response.throwable);
+                        callBack.onFailure(response.throwable);
                     }
                 } else {
                     if (callBack != null) {
@@ -112,7 +111,7 @@ public class RequestImpl extends IRequestAdapter {
                     }
                 } else {
                     if (callBack != null) {
-                        callBack.onFilure(new IOException());
+                        callBack.onFailure(new IOException());
                     }
                 }
             }
